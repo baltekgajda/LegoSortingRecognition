@@ -20,33 +20,28 @@ def load_data(data_path, input_size, train_size=0.7, valid_size=0.2, test_size=0
                                                    std=[0.229, 0.224, 0.225]),
                           ]))
 
-    train_indices, valid_indices, test_indices = (
-        split_indices(len(dataset), train_size, valid_size, test_size)
-    )
+    indices_dict = split_indices(len(dataset), train_size, valid_size, test_size)
 
-    train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,
-                                               sampler=SubsetRandomSampler(train_indices))
-    valid_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,
-                                               sampler=SubsetRandomSampler(valid_indices))
-    test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,
-                                              sampler=SubsetRandomSampler(test_indices))
-    return train_loader, valid_loader, test_loader
+    data_loaders_dict = {x: torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,
+                                                        sampler=SubsetRandomSampler(indices_dict[x]))
+                         for x in ['train', 'val', 'test']}
+    return data_loaders_dict
 
 
-def split_indices(dataset_len, train_size, valid_size, test_size) \
-        -> (torch.Tensor, torch.Tensor, torch.Tensor):
-    if train_size + valid_size + test_size > 1:
+def split_indices(dataset_len, train_size, val_size, test_size) -> dict:
+    if train_size + val_size + test_size > 1:
         raise ValueError('Sum of train_size, valid_size, test_size must be lower than 1')
-
     indices = torch.randperm(dataset_len)
 
-    train_indices = indices[:int(len(indices) * train_size)]
-    idx = int(len(indices) * train_size)
-    valid_indices = indices[idx: int(len(indices) * valid_size) + idx]
-    idx += int(len(indices) * valid_size)
-    test_indices = indices[idx: int(len(indices) * test_size) + idx]
+    start = 0
+    indices_dict = {}
+    size_dict = {'train': train_size, 'val': val_size, 'test': test_size}
+    for x in ['train', 'val', 'test']:
+        end = int(len(indices) * size_dict[x]) + start
+        indices_dict[x] = indices[start: end]
+        start = end
 
-    return train_indices, valid_indices, test_indices
+    return indices_dict
 
 
 def show_random_images(data_loader: DataLoader):

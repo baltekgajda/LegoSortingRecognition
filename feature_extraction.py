@@ -12,10 +12,6 @@ import os
 import copy
 
 # Setup
-data_dir = "./data/hymenoptera_data"
-model_name = "vgg"
-num_classes = 2
-batch_size = 8
 feature_extract = True
 
 def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
@@ -25,6 +21,8 @@ def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
     
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
+
+    model = model.to(device)
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -60,8 +58,8 @@ def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
-            epoch_loss = running_loss / len(dataLoaders[phase].dataset)
-            epoch_acc = running_corrects.double() / len(dataLoaders[phase].dataset)
+            epoch_loss = running_loss / len(dataLoaders[phase].sampler)
+            epoch_acc = running_corrects.double() / len(dataLoaders[phase].sampler)
 
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
             for name, param in model.classifier[6].named_parameters():

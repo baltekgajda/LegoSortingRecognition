@@ -1,6 +1,6 @@
 from __future__ import print_function
 from __future__ import division
-import torch.nn as nn;
+import torch.nn as nn
 from torchvision import models
 
 def create_model(model_type, num_of_clases):
