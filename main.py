@@ -3,13 +3,7 @@ from __future__ import division
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-import torchvision
-from torchvision import datasets, models, transforms
-import matplotlib.pyplot as plt
-import time
-import os
-import copy
+import utils
 
 from data_loader import load_data
 from feature_extraction import initialize_model, train_model
@@ -55,3 +49,6 @@ criterion = nn.CrossEntropyLoss()
 # Train and evaluate
 torch.cuda.current_device()
 model_ft, hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, device, num_epochs=num_of_epochs)
+
+# Save trained model
+utils.save_model(model_ft, "./models")
