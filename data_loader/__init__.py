@@ -1,47 +1,66 @@
+from copy import copy
+
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.utils.data import DataLoader, Dataset, random_split, Subset
 from torchvision.datasets import ImageFolder
 from torchvision.utils import make_grid
 
 
-def load_data(data_path, input_size, train_size=0.7, valid_size=0.2, test_size=0.1,
-              batch_size=4, num_workers=4) \
-        -> (DataLoader, DataLoader, DataLoader):
-    dataset = ImageFolder(root=data_path,
-                          transform=transforms.Compose([
-                              transforms.RandomResizedCrop(input_size, scale=(0.85, 1)),
-                              transforms.RandomVerticalFlip(),
-                              transforms.RandomHorizontalFlip(),
-                              transforms.ToTensor(),
-                              transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                   std=[0.229, 0.224, 0.225]),
-                          ]))
+def load_data(data_path, input_size, train_size=0.7, val_size=0.2,
+              batch_size=4, num_workers=4, dataset_resize_factor=1) -> (DataLoader, DataLoader, DataLoader):
+    train_transforms = transforms.Compose([
+        transforms.RandomResizedCrop(input_size, scale=(0.8, 1)),
+        transforms.RandomVerticalFlip(),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
+    test_transforms = transforms.Compose([
+        transforms.Resize(input_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
+    dataset = ImageFolder(root=data_path, transform=test_transforms)
 
-    indices_dict = split_indices(len(dataset), train_size, valid_size, test_size)
+    if dataset_resize_factor != 1:
+        dataset = reduce_dataset_size(dataset, dataset_resize_factor)
 
-    data_loaders_dict = {x: torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,
-                                                        sampler=SubsetRandomSampler(indices_dict[x]))
-                         for x in ['train', 'val', 'test']}
+    dataset_dict = split_dataset_into_subsets_dict(dataset, train_size, val_size)
+    # set different transformation in training set for augmentation
+    dataset_dict['train'].dataset = copy(dataset)
+    dataset_dict['train'].dataset.transform = train_transforms
+
+    data_loaders_dict = {
+        x: DataLoader(
+            dataset=dataset_dict[x],
+            batch_size=batch_size,
+            num_workers=num_workers,
+        )
+        for x in ['train', 'val', 'test']
+    }
     return data_loaders_dict
 
 
-def split_indices(dataset_len, train_size, val_size, test_size) -> dict:
-    if train_size + val_size + test_size > 1:
-        raise ValueError('Sum of train_size, valid_size, test_size must be lower than 1')
-    indices = torch.randperm(dataset_len)
+def reduce_dataset_size(dataset: Dataset, dataset_resize_factor: float) -> Dataset:
+    if dataset_resize_factor > 1:
+        raise ("dataset_resize_factor must be lower than 1, got: ", dataset_resize_factor)
+    indices = torch.randperm(len(dataset)).tolist()
+    new_size = int(len(dataset) * dataset_resize_factor)
+    return Subset(dataset, indices[0:new_size])
 
-    start = 0
-    indices_dict = {}
-    size_dict = {'train': train_size, 'val': val_size, 'test': test_size}
-    for x in ['train', 'val', 'test']:
-        end = int(len(indices) * size_dict[x]) + start
-        indices_dict[x] = indices[start: end]
-        start = end
 
-    return indices_dict
+def split_dataset_into_subsets_dict(dataset: Dataset, train_size: float, valid_size: float) -> dict:
+    if train_size + valid_size >= 1:
+        raise ("Sum of train and valid size factors must be lower than 1, got ", train_size + valid_size)
+    lengths = [int(len(dataset) * x) for x in [train_size, valid_size]]
+    lengths.append(len(dataset) - sum(lengths))  # add rest rows to testing set
+    data_sets = random_split(dataset, lengths)
+    return dict(zip(['train', 'val', 'test'], data_sets))
 
 
 def show_random_images(data_loader: DataLoader):
@@ -54,6 +73,9 @@ def show_random_images(data_loader: DataLoader):
     np_img = make_grid(images).numpy().transpose((1, 2, 0))
     np_img = np_img * std + mean
     plt.imshow(np_img)
-    label = ', '.join('%5s' % data_loader.dataset.classes[labels[j]] for j in range(4))
+    if isinstance(data_loader.dataset, Subset):
+        label = ', '.join(data_loader.dataset.dataset.classes[labels[j]] for j in range(4))
+    else:
+        label = ', '.join(data_loader.dataset.classes[labels[j]] for j in range(4))
     plt.xlabel(label)
     plt.show()
