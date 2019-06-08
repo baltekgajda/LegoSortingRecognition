@@ -66,6 +66,7 @@ def create_classifier(num_of_classes):
         nn.ReLU(True),
         nn.Dropout(),
         nn.Linear(4096, num_of_classes),
+        nn.Softmax(dim=1)
     )
 
 

@@ -62,10 +62,6 @@ def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
             epoch_acc = running_corrects.double() / len(dataLoaders[phase].sampler)
 
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
-            for name, param in model.classifier[6].named_parameters():
-                with torch.no_grad():
-                    mean = torch.mean(param)
-                print("Param: ", name, ", values: ", param)
 
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
