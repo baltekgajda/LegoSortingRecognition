@@ -7,7 +7,6 @@ import time
 import copy
 
 import VGGFactory
-import utils
 
 # Setup
 feature_extract = True
