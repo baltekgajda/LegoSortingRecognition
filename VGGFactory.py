@@ -3,6 +3,7 @@ from __future__ import division
 import torch.nn as nn
 from torchvision import models
 
+
 def create_model(model_type, num_of_clases):
     """Creates VGG network
 
@@ -20,8 +21,9 @@ def create_model(model_type, num_of_clases):
     if model_type == 1:
         model.classifier = create_classifier(num_of_clases)
     elif model_type == 2:
+        last_conv_layer = 18
         model.classifier = create_classifier(num_of_clases)
-        reset_last_conv_layer(model)
+        model.features[last_conv_layer].requires_grad = True
     elif model_type == 3:
         set_requires_grad(model, True)
     else:
@@ -68,12 +70,6 @@ def create_classifier(num_of_classes):
         nn.Linear(4096, num_of_classes),
     )
 
-
-def reset_last_conv_layer(model):
-    """ Resets last conv layer and last max pool layer"""
-    # Relying on hardcoded index values is wrong
-    # TODO: How to access and create last layer based only on what's inside ?
-    model.features[11] = nn.Conv2d(512, 512, kernel_size=3, padding=1)
 
 def set_requires_grad(model, val):
     for param in model.parameters():
