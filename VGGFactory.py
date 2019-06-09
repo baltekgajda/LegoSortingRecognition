@@ -19,14 +19,14 @@ def create_model(model_type, num_of_classes):
     set_requires_grad(model, False)
 
     if model_type == 1:
-        adjust_classifier(model.classifier, num_of_classes)
+        model.classifier = create_classifier(num_of_classes)
     elif model_type == 2:
-        adjust_classifier(model.classifier, num_of_classes)
+        model.classifier = create_classifier(num_of_classes)
         for name, param in model.features.named_parameters():
             if name == '18.weight' or name == '18.bias':
                 param.requires_grad = True
     elif model_type == 3:
-        adjust_classifier(model.classifier, num_of_classes)
+        model.classifier = create_classifier(num_of_classes)
         set_requires_grad(model, True)
     else:
         raise("Unsupported model_type. Expected 1 or 2 or 3, got: ", model_type)
@@ -77,7 +77,6 @@ def create_classifier(num_of_classes):
         nn.Linear(4096, num_of_classes),
         nn.Softmax(dim=1)
     )
-
 
 def set_requires_grad(model, val):
     for param in model.parameters():

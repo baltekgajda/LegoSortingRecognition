@@ -3,13 +3,11 @@ from __future__ import division
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-import torchvision
-from torchvision import datasets, models, transforms
-import matplotlib.pyplot as plt
 import time
-import os
 import copy
+
+import VGGFactory
+import utils
 
 # Setup
 feature_extract = True
@@ -78,21 +76,42 @@ def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
     model.load_state_dict(best_model_wts)
     return model, val_acc_history
 
-def set_parameter_requires_grad(model, requires_grad):
-    for param in model.parameters():
-        param.requires_grad = requires_grad
 
-def initialize_model(model_name, num_classes, use_pretrained=True):
-    model_ft = None
-    input_size = 0
+def get_params_to_update(model):
+    params_to_update = model.parameters()
+    params_to_update = []
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            params_to_update.append(param)
 
-    if model_name == "VGG":
-        model_ft = models.vgg11(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, False)
-        num_ftrs = model_ft.classifier[6].in_features
-        model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
-        input_size = 224
-    else:
-        raise ValueError('Unsupported model_name: ', model_name)
+    return params_to_update
 
-    return model_ft, input_size
+
+def train_classifier_only(dataloaders_dicts, device, num_of_classes=20, num_of_epochs=10):
+    return _train_model_for_scenario(1, "vgg-classifier-only", dataloaders_dicts, device, num_of_classes, num_of_epochs)
+
+
+def train_classifier_and_last_conv(dataloaders_dicts, device, num_of_classes=20, num_of_epochs=10):
+    return _train_model_for_scenario(2, "vgg-last_conv", dataloaders_dicts, device, num_of_classes, num_of_epochs)
+
+
+def train_full_net(dataloaders_dicts, device, num_of_classes=20, num_of_epochs=10):
+    return _train_model_for_scenario(3, "vgg-full-net", dataloaders_dicts, device, num_of_classes, num_of_epochs)
+
+
+def train_simplified_net(model, dataloaders_dicts, device, num_of_epochs=10):
+    simpler_model = VGGFactory.simplify_model(model)
+    optimizer = optim.SGD(get_params_to_update(model), lr=0.001, momentum=0.9)
+    criterion = nn.CrossEntropyLoss()
+    model_ft, hist = train_model(simpler_model, dataloaders_dicts, criterion, optimizer, device, num_epochs=num_of_epochs)
+    utils.save_model(model_ft, "vgg-simplified")
+    return model_ft, hist
+
+
+def _train_model_for_scenario(scenario_id, model_name, dataloaders_dicts, device, num_of_classes=20, num_of_epochs=10):
+    model = VGGFactory.create_model(scenario_id, num_of_classes)
+    optimizer = optim.SGD(get_params_to_update(model), lr=0.001, momentum=0.9)
+    criterion = nn.CrossEntropyLoss()
+    model_ft, hist = train_model(model, dataloaders_dicts, criterion, optimizer, device, num_epochs=num_of_epochs)
+    utils.save_model(model_ft, model_name)
+    return model_ft, hist
