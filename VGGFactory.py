@@ -4,13 +4,13 @@ import torch.nn as nn
 from torchvision import models
 
 
-def create_model(model_type, num_of_classes):
+def create_model(model_type, num_of_clases):
     """Creates VGG network
 
-    :param model_type:  1 - classification layers set to train,
-                        2 - like 1st plus last conv layer set to train
-                        3 - fully trained model with with all params set to train
-    :param num_of_classes: Number of output classes
+    :param model_type:  1 - classification layers untrained,
+                        2 - like 1st plus last conv layer untrained
+                        3 - fully trained model with requires_grad set to True
+    :param num_of_clases: Number of output classes
     :return: VGG network
     """
     model = models.vgg11(pretrained=True)
@@ -19,14 +19,12 @@ def create_model(model_type, num_of_classes):
     set_requires_grad(model, False)
 
     if model_type == 1:
-        adjust_classifier(model.classifier, num_of_classes)
+        model.classifier = create_classifier(num_of_clases)
     elif model_type == 2:
-        adjust_classifier(model.classifier, num_of_classes)
-        for name, param in model.features.named_parameters():
-            if name == '18.weight' or name == '18.bias':
-                param.requires_grad = True
+        last_conv_layer = 18
+        model.classifier = create_classifier(num_of_clases)
+        model.features[last_conv_layer].requires_grad = True
     elif model_type == 3:
-        adjust_classifier(model.classifier, num_of_classes)
         set_requires_grad(model, True)
     else:
         raise("Unsupported model_type. Expected 1 or 2 or 3, got: ", model_type)
@@ -61,9 +59,16 @@ def simplify_model(model):
     return model
 
 
-def adjust_classifier(classifier, num_of_classes):
-    set_requires_grad(classifier, True)
-    classifier[6] = nn.Linear(4096, num_of_classes)
+def create_classifier(num_of_classes):
+    return nn.Sequential(
+        nn.Linear(512 * 7 * 7, 4096),
+        nn.ReLU(True),
+        nn.Dropout(),
+        nn.Linear(4096, 4096),
+        nn.ReLU(True),
+        nn.Dropout(),
+        nn.Linear(4096, num_of_classes),
+    )
 
 
 def set_requires_grad(model, val):
