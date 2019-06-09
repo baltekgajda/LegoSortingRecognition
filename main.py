@@ -28,7 +28,7 @@ for name, param in simple_model.named_parameters():
         print(name)
 
 print("Initializing Datasets and Dataloaders...")
-dataloaders_dict = load_data('./data/Base Images', input_size, 0.3, 0.1, 0.1)
+dataloaders_dict = load_data('./data/Base Images', input_size)
 
 # Detect if we have a GPU available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
