@@ -4,6 +4,7 @@ import torch.optim as optim
 
 from data_loader import load_data
 from feature_extraction import train_model
+from net_test_and_metrics import test_network
 import VGGFactory
 
 
@@ -23,7 +24,7 @@ input_size = 224
 model = VGGFactory.create_model(3, num_classes)
 
 print("Initializing Datasets and Dataloaders...")
-dataloaders_dict = load_data(data_dir, input_size, batch_size=2)
+dataloaders_dict = load_data('./data/Base Images', input_size, batch_size=2)
 
 # Detect if we have a GPU available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -40,6 +41,10 @@ criterion = nn.CrossEntropyLoss()
 # Train and evaluate
 # torch.cuda.current_device()
 model_ft, hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, device, num_epochs=num_of_epochs)
+
+metrics = test_network(model, dataloaders_dict['test'], device)
+print('Accuracy  {:4f}'.format(metrics['accuracy']))
+print('Top 1 error {:4f}'.format(metrics['top_1_error']))
 
 # Save trained model
 # utils.save_model(model_ft, "./models")

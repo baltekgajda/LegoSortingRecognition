@@ -66,6 +66,19 @@ def adjust_classifier(classifier, num_of_classes):
     classifier[6] = nn.Linear(4096, num_of_classes)
 
 
+def create_classifier(num_of_classes):
+    return nn.Sequential(
+        nn.Linear(512 * 7 * 7, 4096),
+        nn.ReLU(True),
+        nn.Dropout(),
+        nn.Linear(4096, 4096),
+        nn.ReLU(True),
+        nn.Dropout(),
+        nn.Linear(4096, num_of_classes),
+        nn.Softmax(dim=1)
+    )
+
+
 def set_requires_grad(model, val):
     for param in model.parameters():
         param.requires_grad = val
