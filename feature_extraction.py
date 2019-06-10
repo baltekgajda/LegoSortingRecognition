@@ -80,7 +80,6 @@ def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
 
 
 def get_params_to_update(model):
-    params_to_update = model.parameters()
     params_to_update = []
     for name, param in model.named_parameters():
         if param.requires_grad:

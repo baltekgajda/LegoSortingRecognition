@@ -6,6 +6,7 @@ from data_loader import load_data
 from feature_extraction import train_model
 from net_test_and_metrics import test_network
 import VGGFactory
+from svm_classification import train_model_with_svm
 
 
 def get_params_to_learn(m):
@@ -43,7 +44,11 @@ criterion = nn.CrossEntropyLoss()
 model_ft, hist, train_hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, device,
                                          num_epochs=num_of_epochs)
 
-metrics = test_network(model, dataloaders_dict['test'], device)
+metrics = test_network(model_ft, dataloaders_dict['test'], num_classes, device=device)
+model_classifier = train_model_with_svm(model, dataloaders_dict)
+
+metrics = test_network(model_ft, dataloaders_dict['test'], num_classes, device=torch.device("cpu"),
+                       svm_classifier=model_classifier)
 print('Accuracy  {:4f}'.format(metrics['accuracy']))
 print('Top 1 error {:4f}'.format(metrics['top_1_error']))
 
