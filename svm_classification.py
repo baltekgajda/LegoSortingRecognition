@@ -7,7 +7,7 @@ import numpy as np
 from sklearn import svm
 from sklearn.svm.base import BaseSVC
 import torch
-from torch.utils.data import DataLoader
+from torch import nn
 
 from net_test_and_metrics import calculate_net_output
 
@@ -24,7 +24,7 @@ def train_model_with_svm(model, data_loaders, kernel='l'):
         # ugly way to increase batch size, cause svc does not support online learning
         # consider using SGDClassifier whith Kernel Approximation which supports online learning
 
-        model.classification = None  # remove fully connected layer
+        model.classifier = nn.Sequential()  # remove fully connected layer
         device = torch.device("cpu")  # sklearn does not support cuda
         since = time.time()
 
