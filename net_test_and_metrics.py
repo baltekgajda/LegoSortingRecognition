@@ -21,6 +21,8 @@ def test_network(net, test_data_loader, num_classes, device, plot_name='plot', s
         predictions = []
         probabilities = []
         true_classes = []
+        if svm_classifier is not None:
+            device = torch.device("cpu")  # sklearn does not support cuda
         net.to(device)
         for inputs, classes in test_data_loader:
             inputs = inputs.to(device)
@@ -29,8 +31,8 @@ def test_network(net, test_data_loader, num_classes, device, plot_name='plot', s
             batch_outputs = net(inputs)
             if svm_classifier is not None:
                 batch_probabilities = svm_classifier.predict_proba(batch_outputs.numpy())
-                batch_probabilities = predict_proba_ordered(batch_probabilities, svm_classifier.classes_,
-                                                            np.arange(num_classes))
+                batch_probabilities = prediction_probabilities_ordered(batch_probabilities, svm_classifier.classes_,
+                                                                       np.arange(num_classes))
                 probabilities += batch_probabilities.tolist()
                 batch_preds = np.argmax(batch_probabilities, 1)
             else:
@@ -52,9 +54,9 @@ def test_network(net, test_data_loader, num_classes, device, plot_name='plot', s
         return metrics
 
 
-def predict_proba_ordered(probs, classes_, all_classes):
+def prediction_probabilities_ordered(probs, classes_, all_classes):
     """
-    extend probability list with classes which did not appears during learning
+    extend probability list with classes which did not appears during the learning
     :param probs: list of probabilities, output of predict_proba
     :param classes_: clf.classes_
     :param all_classes: all possible classes (superset of classes_)
