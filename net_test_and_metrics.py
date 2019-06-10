@@ -31,8 +31,8 @@ def test_network(net, test_data_loader, num_classes, device, plot_name='plot', s
             batch_outputs = net(inputs)
             if svm_classifier is not None:
                 batch_probabilities = svm_classifier.predict_proba(batch_outputs.numpy())
-                batch_probabilities = prediction_probabilities_ordered(batch_probabilities, svm_classifier.classes_,
-                                                                       np.arange(num_classes))
+                batch_probabilities = _prediction_probabilities_ordered(batch_probabilities, svm_classifier.classes_,
+                                                                        np.arange(num_classes))
                 probabilities += batch_probabilities.tolist()
                 batch_preds = np.argmax(batch_probabilities, 1)
             else:
@@ -54,7 +54,7 @@ def test_network(net, test_data_loader, num_classes, device, plot_name='plot', s
         return metrics
 
 
-def prediction_probabilities_ordered(probs, classes_, all_classes):
+def _prediction_probabilities_ordered(probs, classes_, all_classes):
     """
     extend probability list with classes which did not appears during the learning
     :param probs: list of probabilities, output of predict_proba
@@ -67,3 +67,27 @@ def prediction_probabilities_ordered(probs, classes_, all_classes):
     idx = sorter[np.searchsorted(all_classes, classes_, sorter=sorter)]
     proba_ordered[:, idx] = probs
     return proba_ordered
+
+
+def calculate_net_output(net, test_data_loader, device):
+    """Calculates all network outputs for given data
+
+    :param net: trained neural network
+    :param test_data_loader: data loader with test data
+    :param device: torch device: cuda or cpu
+    :return: list of outputs, listof true labels
+    """
+    with torch.no_grad():
+        outputs = []
+        true_classes = []
+
+        net.to(device)
+        for inputs, classes in test_data_loader:
+            inputs = inputs.to(device)
+            true_classes += (classes.tolist())
+
+            batch_outputs = net(inputs)
+
+            outputs += batch_outputs.tolist()
+
+    return outputs, true_classes

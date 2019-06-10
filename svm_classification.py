@@ -9,6 +9,8 @@ from sklearn.svm.base import BaseSVC
 import torch
 from torch.utils.data import DataLoader
 
+from net_test_and_metrics import calculate_net_output
+
 
 def train_model_with_svm(model, data_loaders, kernel='l'):
     """Train svm classifier
@@ -21,29 +23,23 @@ def train_model_with_svm(model, data_loaders, kernel='l'):
     with torch.no_grad():
         # ugly way to increase batch size, cause svc does not support online learning
         # consider using SGDClassifier whith Kernel Approximation which supports online learning
-        train_loader = DataLoader(
-            dataset=data_loaders['train'].dataset,
-            batch_size=len(data_loaders['train'].sampler),
-            num_workers=data_loaders['train'].num_workers,
-        )
 
         model.classification = None  # remove fully connected layer
         device = torch.device("cpu")  # sklearn does not support cuda
         since = time.time()
 
         model = model.to(device)
+        outputs, true_labels = calculate_net_output(model, data_loaders['train'], device)
+
         clf = _build_svm_classifier(kernel=kernel)
-        inputs, labels = iter(train_loader).next()
         # fit svm
-        outputs = model(inputs)
-        clf.fit(outputs.numpy(), labels.data.numpy())
+        clf.fit(outputs, true_labels)
 
         # evaluate classifier on test set
-        predictions = clf.predict(outputs.numpy())
-        corrects = np.ndarray.sum(predictions == labels.data.numpy())
-        print('SVM train Acc: {:.4f}'.format(corrects / train_loader.batch_size))
+        # predictions = clf.predict(outputs)
+        # corrects = np.ndarray.sum(np.ndarray(predictions) == np.ndarray(true_labels))
+        # print('SVM train Acc: {:.4f}'.format(corrects / len(true_labels)))
 
-        print(labels.data.numpy())
         # evaluate classifier on validation set
         running_corrects = 0
         for inputs, labels in data_loaders['val']:
