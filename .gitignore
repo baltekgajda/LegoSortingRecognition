@@ -109,9 +109,12 @@ data/
 # Mac OS specific
 .DS_Store
 
-# Models
+# Data and results
 models/
 images/
+results/
 
 # Test for anomalies
 tests/anomalies/
+
+
