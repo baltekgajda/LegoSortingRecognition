@@ -22,12 +22,15 @@ def test_network(net, test_data_loader, device, plots_folder='./results/', plot_
         _, batch_preds = torch.max(batch_probabilities, 1)
         predictions += batch_preds.tolist()
 
+    cumulative_ranks = evaluation_metrics.get_cumulative_ranks(true_classes, probabilities)
+
     metrics = {
         'accuracy': evaluation_metrics.accuracy(true_classes, predictions),
         'top_1_error': evaluation_metrics.top_n_error(true_classes, probabilities, n=1),
-        'top_5_error': evaluation_metrics.top_n_error(true_classes, probabilities, n=5)
+        'top_5_error': evaluation_metrics.top_n_error(true_classes, probabilities, n=5),
+        'cumulative_ranks_for_cmc': cumulative_ranks
     }
-    cumulative_ranks = evaluation_metrics.get_cumulative_ranks(true_classes, probabilities)
+
     filename = plots_folder + 'cmc_{}_{}'.format(plot_name, datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
     evaluation_metrics.plot_cmc(
         cumulative_ranks,
