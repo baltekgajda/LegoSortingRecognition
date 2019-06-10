@@ -64,8 +64,7 @@ def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
             if phase == 'val':
-                val_acc_history.append(epoch_acc)
-
+                val_acc_history.append(epoch_acc.item())
 
     print()
     time_elapsed = time.time() - since
