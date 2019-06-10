@@ -23,7 +23,7 @@ class EvaluationMetricsTest(unittest.TestCase):
             [0.9, 0.1],
             [0.8, 0.2]
         ]
-        expected_result = 0
+        expected_result = 1
         actual_result = evaluation_metrics.top_n_error(y_true, probs, n=1)
         self.assertEqual(expected_result, actual_result)
 
@@ -34,7 +34,7 @@ class EvaluationMetricsTest(unittest.TestCase):
             [0.21, 0.19, 0.11, 0.09, 0.26, 0.14]
         ]
         expected_result = 0.5
-        actual_result = evaluation_metrics.top_n_error(y_true, probs, n=1)
+        actual_result = evaluation_metrics.top_n_error(y_true, probs, n=5)
         self.assertEqual(expected_result, actual_result)
 
     def test_get_cumulative_ranks(self):

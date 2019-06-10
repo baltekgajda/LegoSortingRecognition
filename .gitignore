@@ -112,3 +112,6 @@ data/
 # Models
 models/
 images/
+
+# Test for anomalies
+tests/anomalies/

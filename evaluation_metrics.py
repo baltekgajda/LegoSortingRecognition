@@ -23,14 +23,23 @@ def top_n_error(y_true, probs, n=1):
     # This might be slow
     y_true = [(idx, val) for idx, val in enumerate(y_true)]
 
+    # print("y_true: {}".format(y_true))
+
     # Extracts probability of true class. This might be slow
     y_true = [probs[i][j] for (i, j) in y_true]
 
-    # Remove duplicate values of probabilities. Sort desceding. Take first n values
-    probs = -np.sort(-np.unique(np.array(probs), axis=1)[:, :n], axis=-1)
+    # print("y_true: {}".format(y_true))
+    # print("probs before dedup: {}".format(probs))
+
+    # 1. Remove duplicate values of probabilities. 2. Sort desceding. 3. Take first n values
+    probs = -np.sort(-np.unique(np.array(probs), axis=1), axis=-1)[:, :n]
+
+    # print("probs: {}".format(probs))
 
     # Binary array. 1 means that example's class is not in top n predicted classes
     not_in_top_n = [1 if not i in j else 0 for i,j in zip(y_true, probs)]
+
+    # print(not_in_top_n)
 
     # Sum means how many samples was misclassified. Len means how many samples there are.
     return sum(not_in_top_n) / len(not_in_top_n)
