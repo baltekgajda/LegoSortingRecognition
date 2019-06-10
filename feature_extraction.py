@@ -11,11 +11,13 @@ import VGGFactory
 # Setup
 feature_extract = True
 
+
 def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
     since = time.time()
     
     val_acc_history = []
-    
+    train_acc_history = []
+
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
@@ -65,6 +67,8 @@ def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
                 best_model_wts = copy.deepcopy(model.state_dict())
             if phase == 'val':
                 val_acc_history.append(epoch_acc.item())
+            elif phase == 'train':
+                train_acc_history.append(epoch_acc.item())
 
     print()
     time_elapsed = time.time() - since
@@ -72,7 +76,7 @@ def train_model(model, dataLoaders, criterion, optimizer, device, num_epochs=4):
     print('Best val Acc: {:4f}'.format(best_acc))
 
     model.load_state_dict(best_model_wts)
-    return model, val_acc_history
+    return model, val_acc_history, train_acc_history
 
 
 def get_params_to_update(model):
@@ -101,15 +105,15 @@ def train_simplified_net(model, dataloaders_dicts, models_folder, device, num_of
     simpler_model = VGGFactory.simplify_model(model)
     optimizer = optim.SGD(get_params_to_update(model), lr=0.001, momentum=0.9)
     criterion = nn.CrossEntropyLoss()
-    model_ft, hist = train_model(simpler_model, dataloaders_dicts, criterion, optimizer, device, num_epochs=num_of_epochs)
+    model_ft, val_hist, train_hist = train_model(simpler_model, dataloaders_dicts, criterion, optimizer, device, num_epochs=num_of_epochs)
     torch.save(model_ft, models_folder + "vgg-simplified" + ".pth")
-    return model_ft, hist
+    return model_ft, val_hist, train_hist
 
 
 def _train_model_for_scenario(scenario_id, model_name, models_folder,  dataloaders_dicts, device, num_of_classes=20, num_of_epochs=10):
     model = VGGFactory.create_model(scenario_id, num_of_classes)
     optimizer = optim.SGD(get_params_to_update(model), lr=0.001, momentum=0.9)
     criterion = nn.CrossEntropyLoss()
-    model_ft, hist = train_model(model, dataloaders_dicts, criterion, optimizer, device, num_epochs=num_of_epochs)
+    model_ft, val_hist, train_hist = train_model(model, dataloaders_dicts, criterion, optimizer, device, num_epochs=num_of_epochs)
     torch.save(model_ft, models_folder + model_name + ".pth")
-    return model_ft, hist
+    return model_ft, val_hist, train_hist

@@ -40,7 +40,8 @@ criterion = nn.CrossEntropyLoss()
 
 # Train and evaluate
 # torch.cuda.current_device()
-model_ft, hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, device, num_epochs=num_of_epochs)
+model_ft, hist, train_hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, device,
+                                         num_epochs=num_of_epochs)
 
 metrics = test_network(model, dataloaders_dict['test'], device)
 print('Accuracy  {:4f}'.format(metrics['accuracy']))
