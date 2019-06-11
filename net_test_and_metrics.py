@@ -49,9 +49,11 @@ def test_network(net, test_data_loader, num_classes, device, plots_folder='./res
         'cumulative_ranks_for_cmc': cumulative_ranks
     }
 
+    num_of_ranks = len(true_classes)
+    cumulative_ranks_probs = [x / num_of_ranks for x in cumulative_ranks]
     filename = plots_folder + 'cmc_{}_{}'.format(plot_name, datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
     evaluation_metrics.plot_cmc(
-        cumulative_ranks,
+        cumulative_ranks_probs,
         filename=filename
     )
 

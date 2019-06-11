@@ -36,21 +36,22 @@ def top_n_error(y_true, probs, n=1):
     return sum(not_in_top_n) / len(not_in_top_n)
 
 
-def plot_cmc(ranks, filename='', title='CMC curve'):
+def plot_cmc(ranks_probs, filename='', title='CMC curve'):
     """
-    :param ranks: array of ranks. First elem holds probability for rank 1, second for rank 2, etc...
+    :param ranks_probs: array of ranks. First elem holds probability for rank 1, second for rank 2, etc...
     :param filename: filename where figure will be saved. If not present figure will be displayed
     :param title: title of the figure
     """
-    if not ranks:
+    if not ranks_probs:
         raise ValueError('Ranks are not present!')
 
-    x = [i for i in range(1, len(ranks) + 1)]
-    y = ranks
+    x = [i for i in range(1, len(ranks_probs) + 1)]
+    y = ranks_probs
     plt.plot(x, y, linestyle=':', marker='.', markersize=10)
     plt.title(title)
-    plt.ylim([0, 100])
-    plt.xlim([1, None])
+    plt.ylim([0, 1.05])
+    plt.xlim([1, len(ranks_probs) + 1])
+    plt.axhline(y=1, color='r', ls='--')
 
     if filename:
         plt.savefig(filename)

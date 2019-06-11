@@ -54,6 +54,13 @@ class EvaluationMetricsTest(unittest.TestCase):
         actual_value = evaluation_metrics.get_rank(y_true, probs)
         self.assertEqual(expected_value, actual_value)
 
+    def test_plot_cmc(self):
+        cumulative_ranks = [41, 45, 93, 109, 289, 300, 338, 376, 385, 409, 412, 422, 437, 441, 456, 462, 463]
+        num_of_ranks = 463
+        cumulative_ranks_probs = [x / num_of_ranks for x in cumulative_ranks]
+        print(cumulative_ranks_probs)
+        evaluation_metrics.plot_cmc(cumulative_ranks_probs, './test.png')
+
 
 if __name__ == '__main__':
     unittest.main()
