@@ -11,21 +11,20 @@ from torchvision.utils import make_grid
 
 def load_data(data_path, input_size, train_size=0.7, val_size=0.2,
               batch_size=4, num_workers=4, dataset_resize_factor=1) -> (DataLoader, DataLoader, DataLoader):
-    # train_transforms = transforms.Compose([
-    #     transforms.RandomResizedCrop(input_size, scale=(0.8, 1)),
-    #     transforms.RandomVerticalFlip(),
-    #     transforms.RandomHorizontalFlip(),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                          std=[0.229, 0.224, 0.225])
-    # ])
+    train_transforms = transforms.Compose([
+        transforms.RandomResizedCrop(input_size, scale=(0.8, 1)),
+        transforms.RandomVerticalFlip(),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
     test_transforms = transforms.Compose([
         transforms.Resize(input_size),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
     ])
-    train_transforms = test_transforms
     dataset = ImageFolder(root=data_path, transform=test_transforms)
 
     if dataset_resize_factor != 1:
